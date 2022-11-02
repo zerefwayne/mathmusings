@@ -53,3 +53,79 @@ class DrawingCircle(Scene):
         self.wait()
         self.play(FadeOut(group))
         self.wait()
+
+
+class GraphBasics(Scene):
+    def construct(self):
+
+        func_title = MathTex(r"f(x) = cos(x)")
+        self.play(Write(func_title), run_time=3)
+        self.wait()
+
+        self.play(func_title.animate.scale(0.8).to_edge(UP))
+        self.wait()
+
+        plane = NumberPlane(x_length=10, y_length=4,
+                            x_range=[-5, 5], y_range=[-2, 2], axis_config={"include_numbers": True, "font_size": 16})
+
+        self.play(DrawBorderThenFill(plane))
+        self.wait()
+
+        def func(x): return np.cos(x)
+
+        cos_graph = plane.plot(func, color=RED)
+        self.play(Create(cos_graph, run_time=7))
+
+        neg_x, pos_x = -1, 3
+
+        neg_dot = Dot(plane.c2p(neg_x, func(neg_x)))
+        self.play(FadeIn(neg_dot))
+        self.play(Flash(neg_dot))
+        self.wait()
+
+        pos_dot = Dot(plane.c2p(pos_x, func(pos_x)))
+        self.play(FadeIn(pos_dot))
+        self.play(Flash(pos_dot))
+        self.wait()
+
+        self.play(FadeOut(pos_dot))
+        self.wait()
+
+        # control the dot with a value tracker
+
+        x = ValueTracker(0)
+        # dot = Dot(plane.c2p(x.get_value(), np.cos(x.get_value())))
+        dot = always_redraw(lambda: Dot(
+            plane.c2p(x.get_value(), np.cos(x.get_value()))))
+
+        self.play(FadeIn(dot), Flash(dot))
+        self.wait()
+
+        self.play(x.animate.set_value(2.5), run_time=4)
+        self.wait()
+
+        # h_line = plane.get_horizontal_line(plane.c2p(
+        #     x.get_value(), np.cos(x.get_value())))
+
+        h_line = always_redraw(lambda: plane.get_horizontal_line(plane.c2p(
+            x.get_value(), np.cos(x.get_value()))))
+
+        self.play(Create(h_line))
+        self.wait()
+
+        # v_line = plane.get_vertical_line(plane.c2p(
+        #     x.get_value(), np.cos(x.get_value())))
+        v_line = always_redraw(lambda: plane.get_vertical_line(plane.c2p(
+            x.get_value(), np.cos(x.get_value()))))
+        self.play(Create(v_line))
+        self.wait()
+
+        self.play(x.animate.set_value(0.5), run_time=3)
+        self.wait()
+
+        area = always_redraw(lambda: plane.get_area(
+            graph=cos_graph, x_range=[neg_x, x.get_value()]))
+        self.play(FadeIn(area))
+        self.wait()
+        self.play(x.animate.set_value(4), run_time=3)
+        self.wait()
