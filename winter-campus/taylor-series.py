@@ -131,7 +131,21 @@ class GraphBasics(Scene):
         self.wait()
 
 
-class TaylorSeries(Scene):
+class TaylorZoomedSeries(ZoomedScene):
+
+    def __init__(self, **kwargs):
+        ZoomedScene.__init__(
+            self,
+            zoom_factor=0.3,
+            zoomed_display_height=3,
+            zoomed_display_width=3,
+            image_frame_stroke_width=20,
+            zoomed_camera_config={
+                "default_frame_stroke_width": 3,
+            },
+            **kwargs
+        )
+
     def construct(self):
         title = Text("Taylor Series")
         self.play(Write(title))
@@ -200,6 +214,9 @@ class TaylorSeries(Scene):
         self.play(ReplacementTransform(mclauren_formula[1], p0_coeff))
         self.wait(2)
 
+        p0_brace = Brace(VGroup(*mclauren_formula[0:3]))
+        self.play(Create(p0_brace))
+
         def p0_func(x): return 1
         p0_graph = plane.plot(p0_func, x_range=[-5, 5], stroke_color=YELLOW)
         self.play(Create(p0_graph, run_time=3))
@@ -209,6 +226,9 @@ class TaylorSeries(Scene):
             0.75).move_to(mclauren_formula[4].get_center())
         self.play(ReplacementTransform(mclauren_formula[4], p1_coeff))
         self.wait(2)
+
+        p1_brace = Brace(VGroup(*mclauren_formula[0:6]))
+        self.play(ReplacementTransform(p0_brace, p1_brace))
 
         def p1_func(x): return 1
         p1_graph = plane.plot(p1_func, x_range=[-5, 5], stroke_color=PURPLE_A)
@@ -222,7 +242,45 @@ class TaylorSeries(Scene):
         self.play(ReplacementTransform(p2_group, p2_coeff))
         self.wait(2)
 
-        def p2_func(x): return 1 - x**2
+        p2_brace = Brace(VGroup(*mclauren_formula[0:9]))
+        self.play(ReplacementTransform(p1_brace, p2_brace))
+
+        def p2_func(x): return p1_func(x) - (x**2 / 2)
         p2_graph = plane.plot(p2_func, x_range=[-5, 5], stroke_color=RED)
         self.play(ReplacementTransform(p1_graph, p2_graph))
+        self.wait(2)
+
+        graph_group = VGroup(plane, p2_graph, plot_cos)
+        self.play(graph_group.animate.to_edge(LEFT))
+        self.wait(2)
+
+        # setting up the zoom camera
+        self.zoomed_camera.frame.scale(2)
+        zoomed_display = self.zoomed_display
+        zoomed_display.move_to(ORIGIN).to_edge(RIGHT)
+        self.activate_zooming(animate=True)
+        self.play(ApplyMethod(
+            self.zoomed_camera.frame.move_to, plane.c2p(0, 1), run_time=3))
+
+        p3_coeff = MathTex("0").set_color(ORANGE).scale(
+            0.75).move_to(mclauren_formula[10].get_center())
+        self.play(ReplacementTransform(mclauren_formula[10], p3_coeff))
+        self.wait(2)
+
+        p3_brace = Brace(VGroup(*mclauren_formula[0:12]))
+        self.play(ReplacementTransform(p2_brace, p3_brace))
+
+        def p3_func(x): return p2_func(x)
+        p3_graph = plane.plot(p3_func, x_range=[-5, 5], stroke_color=ORANGE)
+        self.play(ReplacementTransform(p2_graph, p3_graph))
+        self.wait(2)
+
+        def p4_func(x): return p3_func(x) + (x**4 / np.math.factorial(4))
+        p4_graph = plane.plot(p4_func, x_range=[-5, 5], stroke_color=DARK_BLUE)
+        self.play(ReplacementTransform(p3_graph, p4_graph))
+        self.wait(2)
+
+        def p5_func(x): return p4_func(x) - (x**6 / np.math.factorial(6))
+        p5_graph = plane.plot(p5_func, x_range=[-5, 5], stroke_color=TEAL_A)
+        self.play(ReplacementTransform(p4_graph, p5_graph))
         self.wait(2)
